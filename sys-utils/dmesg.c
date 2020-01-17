@@ -192,6 +192,7 @@ struct dmesg_control {
 	unsigned int	follow:1,	/* wait for new messages */
 			raw:1,		/* raw mode */
 			noesc:1,	/* no escape */
+			noctrl:1,	/* print control characters as hex */
 			fltr_lev:1,	/* filter out by levels[] */
 			fltr_fac:1,	/* filter out by facilities[] */
 			decode:1,	/* use "facility: level: " prefix */
@@ -656,6 +657,10 @@ static void safe_fwrite(struct dmesg_control *ctl, const char *buf, size_t size,
 				len = 1;
 				if (!isprint((unsigned char) *p) &&
 				    !isspace((unsigned char) *p))        /* non-printable */
+					hex = 1;
+
+				if (ctl->noctrl &&
+				    isctrl((unsigned char) *p))  /* control */
 					hex = 1;
 			}
 		}
@@ -1349,6 +1354,7 @@ int main(int argc, char *argv[])
 		{ "noescape",      no_argument,       NULL, OPT_NOESC },
 		{ "notime",        no_argument,       NULL, 't' },
 		{ "nopager",       no_argument,       NULL, 'P' },
+		{ "noctrl",        no_argument,       NULL, 'X' },
 		{ "userspace",     no_argument,       NULL, 'u' },
 		{ "version",       no_argument,	      NULL, 'V' },
 		{ "time-format",   required_argument, NULL, OPT_TIME_FORMAT },
@@ -1468,6 +1474,9 @@ int main(int argc, char *argv[])
 			break;
 		case 'x':
 			ctl.decode = 1;
+			break;
+		case 'X':
+			ctl.noctrl = 1;
 			break;
 		case OPT_TIME_FORMAT:
 			ctl.time_fmt = which_time_format(optarg);
